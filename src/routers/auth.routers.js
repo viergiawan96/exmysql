@@ -1,8 +1,28 @@
 const express = require("express");
 const router = express.Router();
 const jwt = require("jsonwebtoken");
+const { body } = require("express-validator");
+
+const authController = require("../controllers/auth.controller");
 
 let refreshTokens = [];
+
+router.post(
+  "/register",
+  [
+    body("username")
+      .isLength({ min: 5 })
+      .withMessage("input nama tidak sesuai"),
+    body("email")
+      .isEmail()
+      .normalizeEmail()
+      .withMessage("input email tidak sesuai"),
+    body("password")
+      .isLength({ min: 8 })
+      .withMessage("input password tidak sesuai"),
+  ],
+  authController.register
+);
 
 router.post("/token", (req, res) => {
   const refreshToken = req.body.token;
