@@ -6,6 +6,7 @@ const path = require("path");
 const bodyParser = require("body-parser");
 
 const authRoutes = require("./src/routers/auth.routers");
+const postRouter = require("./src/routers/post.router");
 const authenticateToken = require("./src/routers/authenticateToken");
 const db = require("./src/models");
 
@@ -25,9 +26,7 @@ app.use((req, res, next) => {
 
 //route
 app.use("/api", authRoutes);
-app.get("/posts", authenticateToken, (req, res) => {
-  res.json(req.user.name);
-});
+app.use("/api/post", authenticateToken, postRouter);
 
 //handling untuk return error
 app.use((error, req, res, next) => {

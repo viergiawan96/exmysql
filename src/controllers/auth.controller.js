@@ -11,7 +11,7 @@ exports.register = async (req, res, next) => {
   if (!error.isEmpty()) {
     return res
       .status(400)
-      .json({ message: "inputan tidak sesusai", data: error.array() });
+      .json({ message: "inputan tidak sesuai", data: error.array() });
   }
 
   const hashPassword = await bcrypt.hash(req.body.password, 10);
@@ -26,10 +26,12 @@ exports.register = async (req, res, next) => {
     .create(user)
     .then((result) => {
       const getToken = {
-        name: result.username,
+        email: result.email,
         password: result.password,
       };
-      const accessToken = jwt.sign(getToken, process.env.REFRESH_TOKEN_SECRET);
+      const accessToken = jwt.sign(getToken, process.env.ACCESS_TOKEN_SECRET, {
+        expiresIn: "1d",
+      });
 
       const response = {
         name: result.username,
@@ -48,4 +50,55 @@ exports.register = async (req, res, next) => {
         message: err.message || "Some error accured while creating user",
       });
     });
+};
+
+exports.login = async (req, res, next) => {
+  const error = validationResult(req);
+
+  if (!error.isEmpty()) {
+    return res
+      .status(400)
+      .json({ message: "inputan tidak sesuai", data: error.array() });
+  }
+
+  const data = {
+    email: req.body.email,
+    password: req.body.password,
+  };
+
+  const check = await users.findOne({
+    where: {
+      email: data.email,
+    },
+  });
+
+  if (check) {
+    bcrypt.compare(data.password, check.password, function (err, result) {
+      if (err)
+        return res.status(403).json({
+          err,
+        });
+
+      const accessToken = jwt.sign(data, process.env.ACCESS_TOKEN_SECRET, {
+        expiresIn: "1d",
+      });
+
+      const response = {
+        name: check.username,
+        email: check.email,
+        role: check.role,
+        accessToken: accessToken,
+      };
+
+      return res.status(200).json({
+        message: "Login User Success",
+        data: response,
+      });
+    });
+  } else {
+    return res.status(403).json({
+      message: "email tidak di temukan",
+      data: data,
+    });
+  }
 };
