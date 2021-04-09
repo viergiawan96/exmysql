@@ -2,7 +2,6 @@ require("dotenv").config();
 
 const express = require("express");
 const multer = require("multer");
-const path = require("path");
 const bodyParser = require("body-parser");
 
 const authRoutes = require("./src/routers/auth.routers");
@@ -27,15 +26,6 @@ app.use((req, res, next) => {
 //route
 app.use("/api", authRoutes);
 app.use("/api/post", authenticateToken, postRouter);
-
-//handling untuk return error
-app.use((error, req, res, next) => {
-  const status = error.errorStatus || 500;
-  const message = error.message;
-  const data = error.data;
-
-  res.status(status).json({ message: message, data: data });
-});
 
 //sync database
 db.sequelize.sync();
